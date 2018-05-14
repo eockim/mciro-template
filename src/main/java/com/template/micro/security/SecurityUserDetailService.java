@@ -37,8 +37,7 @@ public class SecurityUserDetailService implements UserDetailsService {
         builder.password(shopUser.getPassword());
         builder.roles("USER");
 
-        log.info("userID {}", userId);
-
         return builder.build();
+
     }
 }

@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -27,19 +29,19 @@ public class MicroApplication {
     }
 
     @GetMapping("users")
-    public Mono<List<ShopUser>> users(){
+    public Flux<ShopUser> users(){
 
-        return Mono.fromCompletionStage(userService.shopUsers());
+        //return Mono.fromCompletionStage(userService.shopUsers());
+        return Flux.fromIterable(userService.shopUsers());
 
     }
 
     @PostMapping("users")
-    public String createUser(ShopUser shopUser){
+    public Mono<ShopUser> createUser(@RequestBody ShopUser shopUser){
 
         //userService.createUser(new ShopUser("hyung1988", "hyungjoon6876@gmail.com", "kim", "test", "010-6363-6876", "M", "1988-10-20", "direct","Y","Y","Y") );
-        userService.createUser(shopUser);
 
-        return "post users";
+        return Mono.fromCompletionStage(userService.createUser(shopUser));
     }
 
     @PostMapping("users/createWithArray")
@@ -61,21 +63,23 @@ public class MicroApplication {
     }
 
     @GetMapping("users/{userId}")
-    public Mono<ShopUser> user(@PathVariable String userId){
-        return Mono.fromCompletionStage(userService.shopUser(userId));
+    public Mono<ResponseEntity<ShopUser>> user(@PathVariable String userId){
+        return Mono.fromCompletionStage(userService.shopUser(userId))
+                .map(x -> ResponseEntity.ok(x))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PutMapping("users/{userId}")
-    public String updateUser(@PathVariable String userId, @RequestBody ShopUser shopUser){
+    public Mono<ShopUser> updateUser(@PathVariable String userId, @RequestBody ShopUser shopUser){
 
-        userService.updateUser(userId, shopUser);
-        return "user : " + userId;
+        return Mono.fromCompletionStage(userService.updateUser(userId, shopUser));
     }
 
     @DeleteMapping("users/{userId}")
     public String deleteUser(@PathVariable String userId){
 
-        userService.deleteUser(userId);
+       userService.deleteUser(userId);
+
         return "delete user : " + userId;
     }
 }

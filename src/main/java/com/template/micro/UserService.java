@@ -7,12 +7,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,19 +22,28 @@ public class UserService {
     @Autowired
     UserRepository userRepository;
 
-    public void createUser(ShopUser shopUser){
+    @Async
+    public CompletableFuture<ShopUser> createUser(ShopUser shopUser){
 
         shopUser.setPassword(encoder().encode(shopUser.getPassword()));
-        userRepository.save(shopUser);
+        return CompletableFuture.completedFuture(userRepository.save(shopUser));
     }
 
     public void createUserList(ArrayList<ShopUser> shopUserList){
-        userRepository.saveAll(shopUserList);
+
+        userRepository.saveAll(
+                shopUserList
+                .stream()
+                .map(x -> {
+                    x.setPassword(encoder().encode(x.getPassword()));
+                    return x;
+                }).collect(Collectors.toList())
+        );
+
     }
 
-    @Async
-    public CompletableFuture<List<ShopUser>> shopUsers(){
-        return CompletableFuture.completedFuture(userRepository.findAll());
+    public List<ShopUser> shopUsers(){
+        return userRepository.findAll();
     }
 
     @Async
@@ -43,7 +52,7 @@ public class UserService {
     }
 
     @Async
-    public void updateUser(String userId, ShopUser shopUser){
+    public CompletableFuture<ShopUser> updateUser(String userId, ShopUser shopUser){
 
         ShopUser shopUserToUpdate = userRepository.findByUserId(userId);
 
@@ -57,14 +66,16 @@ public class UserService {
         shopUserToUpdate.setMarketingPush(shopUser.getMarketingPush());
         shopUserToUpdate.setMarketingSms(shopUser.getMarketingSms());
 
-        userRepository.save(shopUserToUpdate);
+        return CompletableFuture.completedFuture(userRepository.save(shopUserToUpdate));
     }
 
     @Async
-    public void deleteUser(String userId){
+    public List<ShopUser> deleteUser(String userId){
 
-        //userRepository.deleteByUserId(userId);
         userRepository.removeByUserId(userId);
+
+        return userRepository.findAll();
+
     }
 
     @Bean

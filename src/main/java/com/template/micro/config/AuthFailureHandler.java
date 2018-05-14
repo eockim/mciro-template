@@ -19,8 +19,6 @@ public class AuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
         re.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        log.info("failure handler working!");
-
         PrintWriter writer = re.getWriter();
         writer.write(e.getMessage());
         writer.flush();
