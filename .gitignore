@@ -24,4 +24,7 @@ hs_err_pid*
 #ide
 .idea
 .mvn
+micro.iml
+mvnw
+mvnw.cmd
 
